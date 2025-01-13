@@ -338,7 +338,7 @@ if st.button("Analyze video", use_container_width=True, type='primary'):
 
     else: # Process the fideo file
         if video_file is not None:
-            video_path = os.path.join("temp", video_file.name)
+            video_path = os.path.join("/temp", video_file.name)
         try:
             with open(video_path, "wb") as f:
                 f.write(video_file.getbuffer())
