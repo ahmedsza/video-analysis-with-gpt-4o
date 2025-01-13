@@ -204,6 +204,7 @@ def analyze_video(base64frames, system_prompt, user_prompt, transcription, tempe
     return response
 
 # Split the video in segments of N seconds (by default 3 minutes). If segment_length is 0 the full video is processed
+# Split the video in segments of N seconds (by default 3 minutes). If segment_length is 0 the full video is processed
 def split_video(video_path, output_dir, segment_length=180):
     cap = cv2.VideoCapture(video_path)
     fps = cap.get(cv2.CAP_PROP_FPS)
@@ -213,7 +214,7 @@ def split_video(video_path, output_dir, segment_length=180):
     if segment_length == 0: # Do not split
         segment_length = int(duration)
 
-    for start_time in range(0, int(duration), segment_length):
+    for start_time in range(0, int(duration), max(segment_length, 1)): # Ensure step size is at least 1
         end_time = min(start_time + segment_length, duration)
         output_file = os.path.join(output_dir, f'{os.path.splitext(os.path.basename(video_path))[0]}_segment_{start_time}-{end_time}_secs.mp4')
         ffmpeg_extract_subclip(video_path, start_time, end_time, targetname=output_file)
@@ -377,7 +378,7 @@ if st.button("Analyze video", use_container_width=True, type='primary'):
                 duracion_segmento=180 # 3 minutes
             else:
                 duracion_segmento=seconds_split #SEGMENT_DURATION
-        
+        duracion_segmento = max(duracion_segmento, 1)
         for start in range(0, video_duration, duracion_segmento):
             end = start + duracion_segmento
             filename = f'segments/segment_{start}-{end}.mp4'
