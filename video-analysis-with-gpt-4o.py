@@ -14,7 +14,7 @@ from yt_dlp.utils import download_range_func
 
 # Default configuration
 SEGMENT_DURATION = 20 # In seconds, Set to 0 to not split the video
-SYSTEM_PROMPT = "You are a helpful assistant that describes in detail a video. Response in the same language than the transcription."
+SYSTEM_PROMPT = "You are a helpful assistant that describes videos. Provide a very short summary. Then provide a sentiment analysis. Finally provide a detailed review."
 USER_PROMPT = "These are the frames from the video."
 DEFAULT_TEMPERATURE = 0.5
 RESIZE_OF_FRAMES = 2
@@ -121,7 +121,46 @@ def process_audio(video_path):
 
 # Function to analyze the video with GPT-4o
 def analyze_video(base64frames, system_prompt, user_prompt, transcription, temperature):
+    print(f'SYSTEM PROMPT: [{system_prompt}]')
+    print(f'USER PROMPT:   [{user_prompt}]')
 
+    try:
+        if transcription != '': # Include the audio transcription
+            response = aoai_client.chat.completions.create(
+                model=aoai_model_name,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                    {"role": "user", "content": [
+                        *map(lambda x: {"type": "image_url", "image_url": {"url": f'data:image/jpg;base64,{x}', "detail": "auto"}}, base64frames),
+                        {"type": "text", "text": f"The audio transcription is: {transcription}"}
+                    ]}
+                ],
+                temperature=temperature,
+                max_tokens=4096
+            )
+        else: # Without the audio transcription
+            response = aoai_client.chat.completions.create(
+                model=aoai_model_name,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                    {"role": "user", "content": [
+                        *map(lambda x: {"type": "image_url", "image_url": {"url": f'data:image/jpg;base64,{x}', "detail": "auto"}}, base64frames),
+                    ]}
+                ],
+                temperature=0.5,
+                max_tokens=4096
+            )
+
+        json_response = json.loads(response.model_dump_json())
+        response = json_response['choices'][0]['message']['content']
+
+    except Exception as ex:
+        print(f'ERROR: {ex}')
+        response = f'ERROR: {ex}'
+
+    return response
     print(f'SYSTEM PROMPT: [{system_prompt}]')
     print(f'USER PROMPT:   [{user_prompt}]')
 
@@ -183,6 +222,44 @@ def split_video(video_path, output_dir, segment_length=180):
 # Process the video
 def execute_video_processing(st, segment_path, system_prompt, user_prompt, temperature):
     # Show the video on the screen
+    st.write(f"Video: {segment_path}:")
+    st.video(segment_path)
+
+    with st.spinner(f"Analyzing video segment: {segment_path}"):
+        # Extract 1 frame per second. Adjust the `seconds_per_frame` parameter to change the sampling rate
+        with st.spinner(f"Extracting frames..."):
+            inicio = time.time()
+            if save_frames:
+                output_dir = 'frames'
+            else:
+                output_dir = ''
+            base64frames = process_video(segment_path, seconds_per_frame=seconds_per_frame, resize=resize, output_dir=output_dir, temperature=temperature)
+            fin = time.time()
+            print(f'\t>>>> Frames extraction took {(fin - inicio):.3f} seconds <<<<')
+
+        # Extract the transcription of the audio
+        if audio_transcription:
+            msg = f'Analyzing frames and audio with {aoai_model_name}...'
+            with st.spinner(f"Transcribing audio from video file..."):
+                inicio = time.time()
+                transcription = process_audio(segment_path)
+                fin = time.time()
+            print(f'Transcription: [{transcription}]')
+            if show_transcription:
+                st.markdown(f"**Transcription**: {transcription}", unsafe_allow_html=True)
+            print(f'\t>>>> Audio transcription took {(fin - inicio):.3f} seconds <<<<')
+        else:
+            msg = f'Analyzing frames with {aoai_model_name}...'
+            transcription = ''
+        # Analyze the video frames and the audio transcription with GPT-4o
+        with st.spinner(msg):
+            inicio = time.time()
+            analysis = analyze_video(base64frames, system_prompt, user_prompt, transcription, temperature)
+            fin = time.time()
+        print(f'\t>>>> Analysis with {aoai_model_name} took {(fin - inicio):.3f} seconds <<<<')
+
+    st.success("Analysis completed.")
+    return analysis    # Show the video on the screen
     st.write(f"Video: {segment_path}:")
     st.video(segment_path)
 
