@@ -1,5 +1,16 @@
 # Video Analysis with GPT-4o
 
+# Update
+This repo was forked from https://github.com/Azure-Samples/video-analysis-with-gpt-4o and some changes 
+1. Modified the code to change directory from temp to /temp
+2. Added ```bash RUN apt-get update && apt-get install -y python3-opencv``` to the docker file
+3. change the openai package dependency in requirements.txt to later version
+4. Added a deployapp.ps1 file to provision everything
+
+To get started open deployapp.ps1 and update the variables at the top of the file. Then run the script in powershell.
+
+
+# Original comments from the original repo
 The aim of this respo is to demonstrate the capabilities of GPT-4o to analyze and extract insights from a video file or a video url (e.g. Youtube)
 
 The steps to process a video are the following:
