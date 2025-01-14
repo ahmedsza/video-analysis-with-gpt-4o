@@ -1,7 +1,7 @@
 # Use an official base image of Python 3.12.5
 FROM python:3.12.5-slim
 # Create the working directory
-RUN apt-get update && apt-get install -y python3-opencv
+RUN apt-get update && apt-get install -y python3-opencv &&  apt-get install -y ffmpeg
 RUN mkdir /video-analysis-with-gpt-4o
 # Set the working directory to /video-analysis-with-gpt-4o
 WORKDIR /video-analysis-with-gpt-4o

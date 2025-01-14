@@ -50,10 +50,13 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 cover/
+segments/
 
 # Translations
 *.mo
 *.pot
+*.mp3
+*.mp4
 
 # Django stuff:
 *.log

@@ -27,6 +27,8 @@ load_dotenv(override=True)
 aoai_endpoint = os.environ["AZURE_OPENAI_ENDPOINT"]
 aoai_apikey = os.environ["AZURE_OPENAI_API_KEY"]
 aoai_model_name = os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"]
+
+
 print(f'aoai_endpoint: {aoai_endpoint}, aoai_model_name: {aoai_model_name}')
 # Create AOAI client for answer generation
 aoai_client = AzureOpenAI(
@@ -40,6 +42,9 @@ aoai_client = AzureOpenAI(
 whisper_endpoint = os.environ["WHISPER_ENDPOINT"]
 whisper_apikey = os.environ["WHISPER_API_KEY"]
 whisper_model_name = os.environ["WHISPER_DEPLOYMENT_NAME"]
+
+
+
 # Create AOAI client for whisper
 whisper_client = AzureOpenAI(
     api_version='2024-02-01',
@@ -387,9 +392,15 @@ if st.button("Analyze video", use_container_width=True, type='primary'):
                 ydl_opts['download_ranges'] = download_range_func(None, [(start, end)])
 
                 print(f'start: {start}, video_duration: {video_duration}, duracion_segmento: {duracion_segmento}')
+                st.write(f'start: {start}, video_duration: {video_duration}, duracion_segmento: {duracion_segmento}')
+
                 try:
+                    st.write("about to download")
                     ydl.download([url])
-                except:
+                    
+                except Exception as ex:
+                    st.write(f'ERROR: {ex}')
+                    print(f'ERROR: {ex}')
                     break
 
             if os.path.exists(filename): # ext .mp4
@@ -400,7 +411,7 @@ if st.button("Analyze video", use_container_width=True, type='primary'):
                     segment_path = filename + '.webm'
 
             print(f"Segment downloaded: {segment_path}")
-
+            st.write(f"Segment downloaded: {segment_path}")
             # Process the video segment
             analysis = execute_video_processing(st, segment_path, system_prompt, user_prompt, temperature)
             st.markdown(f"**Description**: {analysis}", unsafe_allow_html=True)
