@@ -20,6 +20,7 @@ $planName = "video-analysis-plan"
 $appName = "videowithwhisperapp" + $suffix
 $storageAccountName = "videowithaistorageact" + $suffix
 $shareName = "video-share"
+$mountPath = "/tempvideo"
 # create resource group
 az group create --name $resourceGroup --location $location
 
@@ -78,7 +79,8 @@ az storage share create --name $shareName --account-name $storageAccountName
 
 #mount the file share to the web app with name temp
 $storageKey = az storage account keys list --account-name $storageAccountName --resource-group $resourceGroup --query "[0].value" -o tsv
-az webapp config storage-account add --resource-group $resourceGroup --name $appName --custom-id $shareName --storage-type AzureFiles --share-name $shareName --account-name $storageAccountName --access-key $storageKey --mount-path /temp
+az webapp config storage-account add --resource-group $resourceGroup --name $appName --custom-id $shareName --storage-type AzureFiles --share-name $shareName --account-name $storageAccountName --access-key $storageKey --mount-path $mountPath
+
 
 # Stop the web app
 az webapp stop --name $appName --resource-group $resourceGroup

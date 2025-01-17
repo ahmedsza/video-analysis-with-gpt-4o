@@ -431,7 +431,7 @@ if st.button("Analyze video", use_container_width=True, type='primary'):
                 return os.path.exists("/.dockerenv")
 
             if is_docker():
-                video_path = os.path.join("/temp", video_file.name)
+                video_path = os.path.join("/tempvideo", video_file.name)
             else:
                 video_path = video_file.name
         try:
